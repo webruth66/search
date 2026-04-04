@@ -1,0 +1,15 @@
+<script src="https://unpkg.com/sip.js/dist/sip.min.js"></script>
+<script>
+    // 创建用户代理实例
+    const uri = SIP.UserAgent.makeURI("sip:15848645177@jhws.top");
+    const transportOptions = { server: "wss://jhws.top:8089" }; // 必须是 WSS
+    const ua = new SIP.UserAgent({ uri, transportOptions });
+
+    async function sendSipMessage() {
+        await ua.start();
+        const target = SIP.UserAgent.makeURI("sip:OD-2617-1-14-3-0-1@jhws.top");
+        const messager = new SIP.Messager(ua, target, "你好，这是测试内容");
+        messager.message();
+    }
+</script>
+<button onclick="sendSipMessage()">纯前端发送 MESSAGE</button>
