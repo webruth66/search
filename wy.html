@@ -1,15 +1,66 @@
-<script src="https://unpkg.com/sip.js/dist/sip.min.js"></script>
-<script>
-    // 创建用户代理实例
-    const uri = SIP.UserAgent.makeURI("sip:15848645177@jhws.top");
-    const transportOptions = { server: "wss://jhws.top:8089" }; // 必须是 WSS
-    const ua = new SIP.UserAgent({ uri, transportOptions });
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能门禁控制终端</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 300px; }
+        h2 { color: #1a73e8; margin-bottom: 1.5rem; }
+        .btn { 
+            background: #1a73e8; color: white; border: none; padding: 12px 30px; 
+            font-size: 18px; border-radius: 25px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(26, 115, 232, 0.3);
+        }
+        .btn:hover { background: #1557b0; transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        #status { margin-top: 1.5rem; font-size: 14px; color: #666; }
+        .success { color: #28a745 !important; }
+        .error { color: #dc3545 !important; }
+    </style>
+</head>
+<body>
 
-    async function sendSipMessage() {
-        await ua.start();
-        const target = SIP.UserAgent.makeURI("sip:OD-2617-1-14-3-0-1@jhws.top");
-        const messager = new SIP.Messager(ua, target, "你好，这是测试内容");
-        messager.message();
-    }
+<div class="card">
+    <h2>远程开锁</h2>
+    <p>设备 ID: OD-2617...1</p>
+    <button class="btn" id="unlockBtn">立即开锁</button>
+    <div id="status">准备就绪</div>
+</div>
+
+<script>
+    const btn = document.getElementById('unlockBtn');
+    const statusDiv = document.getElementById('status');
+
+    btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        statusDiv.innerText = "正在发送指令...";
+        statusDiv.className = "";
+
+        try {
+            // 调用本地 Python 后端 API
+            const response = await fetch('http://66.103.201.151:5000/unlock', {
+                method: 'POST'
+            });
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                statusDiv.innerText = "✔ 开锁指令发送成功";
+                statusDiv.className = "success";
+            } else {
+                statusDiv.innerText = "✘ 发送失败: " + data.message;
+                statusDiv.className = "error";
+            }
+        } catch (error) {
+            statusDiv.innerText = "✘ 无法连接到后端服务器";
+            statusDiv.className = "error";
+        } finally {
+            btn.disabled = false;
+        }
+    });
 </script>
-<button onclick="sendSipMessage()">纯前端发送 MESSAGE</button>
+
+</body>
+</html>
